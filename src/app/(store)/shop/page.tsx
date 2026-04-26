@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { shopApi } from "@/lib/api";
 import ProductCard from "@/components/shop/ProductCard";
@@ -11,6 +12,14 @@ import { Search } from "lucide-react";
 import type { Product, PaginatedResponse, Category } from "@/types";
 
 export default function ShopPage() {
+  return (
+    <Suspense>
+      <ShopContent />
+    </Suspense>
+  );
+}
+
+function ShopContent() {
   const sp     = useSearchParams();
   const router = useRouter();
 

@@ -17,6 +17,14 @@ function formatNGN(v: number) {
 const STATUS_STEPS = ["pending", "confirmed", "processing", "shipped", "delivered"];
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <React.Suspense>
+      <OrderDetail params={params} />
+    </React.Suspense>
+  );
+}
+
+function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id }  = React.use(params);
   const sp      = useSearchParams();
   const isNew   = sp.get("new") === "1";
