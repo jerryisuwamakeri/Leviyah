@@ -5,15 +5,14 @@ import { shopApi } from "@/lib/api";
 import ProductCard from "@/components/shop/ProductCard";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Scissors, Droplets, Wind, Palette, ShoppingBag } from "lucide-react";
+import { ArrowRight, Scissors, Droplets, Palette, ShoppingBag } from "lucide-react";
 import type { Product, Category } from "@/types";
 
 const categories = [
-  { label: "Hair",      slug: "hair",      icon: Scissors   },
-  { label: "Skincare",  slug: "skincare",  icon: Droplets   },
-  { label: "Body Care", slug: "body-care", icon: Wind       },
-  { label: "Makeup",    slug: "makeup",    icon: Palette    },
-  { label: "Bags",      slug: "bags",      icon: ShoppingBag },
+  { label: "Hair",          slug: "hair",          icon: Scissors    },
+  { label: "Supplements",   slug: "supplements",   icon: Droplets    },
+  { label: "Lip Essentials",slug: "lip-essentials",icon: Palette     },
+  { label: "Bags",          slug: "bags",          icon: ShoppingBag },
 ];
 
 export default function HomePage() {
@@ -47,7 +46,7 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 w-full">
           <div className="max-w-xl">
             <p className="text-[#C9A880] text-xs tracking-[0.3em] uppercase font-semibold mb-6">
-              Premium Beauty · Abuja, Nigeria
+              Premium Beauty
             </p>
             <h1 className="text-6xl lg:text-8xl font-black leading-[0.9] tracking-tight mb-8">
               <span className="block">Beauty</span>
@@ -78,7 +77,7 @@ export default function HomePage() {
       {/* ── Category strip ───────────────────────────────── */}
       <section className="border-b border-[#E8D8C4] bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-5 divide-x divide-[#E8D8C4]">
+          <div className="grid grid-cols-4 divide-x divide-[#E8D8C4]">
             {categories.map(({ label, slug, icon: Icon }) => (
               <Link key={slug} href={`/shop?category=${slug}`}
                 className="group flex flex-col items-center justify-center gap-2.5 py-7 hover:bg-[#F5EAD8] transition-colors">
@@ -129,7 +128,7 @@ export default function HomePage() {
             {[
               { title: "100% Authentic",  desc: "Every product is verified genuine, sourced from trusted suppliers." },
               { title: "Premium Quality", desc: "We curate only the finest beauty essentials for every woman." },
-              { title: "Fast Delivery",   desc: "Same-day dispatch available across Kubwa & Abuja." },
+              { title: "Fast Delivery",   desc: "Swift dispatch with nationwide delivery available." },
             ].map(({ title, desc }) => (
               <div key={title} className="border-t border-[#C9A880]/30 pt-6">
                 <h3 className="text-sm font-bold tracking-widest uppercase text-[#C9A880] mb-3">{title}</h3>
