@@ -142,11 +142,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           </div>
 
           {/* ── Details ─────────────────────────────────── */}
-          <div>
+          <div className="min-w-0">
             <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-[#C9A880] mb-3">
               {product.category?.name}
             </p>
-            <h1 className="text-2xl lg:text-3xl font-black text-[#111111] leading-tight">{product.name}</h1>
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-black text-[#111111] leading-tight break-words">{product.name}</h1>
 
             {product.average_rating > 0 && (
               <div className="flex items-center gap-2 mt-3">
@@ -157,10 +157,15 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               </div>
             )}
 
-            <div className="flex items-baseline gap-3 mt-5 pb-5 border-b border-[#E8D8C4]">
-              <span className="text-3xl font-black text-[#111111]">{formatNGN(price)}</span>
+            <div className="mt-5 pb-5 border-b border-[#E8D8C4]">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="text-3xl font-black text-[#111111]">{formatNGN(price)}</span>
+                {product.sale_price && (
+                  <span className="text-sm line-through text-[#B8A090]">{formatNGN(product.base_price)}</span>
+                )}
+              </div>
               {product.sale_price && (
-                <span className="text-base line-through text-[#B8A090]">{formatNGN(product.base_price)}</span>
+                <p className="text-[9px] font-bold tracking-widest uppercase text-[#C9A880] mt-1">Sale Price</p>
               )}
             </div>
 
