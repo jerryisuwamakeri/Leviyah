@@ -41,7 +41,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const related = data?.related ?? [];
 
   const colors  = [...new Set(product?.variants?.map((v) => v.color).filter(Boolean) as string[])];
-  const lengths = [...new Set(product?.variants?.filter((v) => !selectedColor || v.color === selectedColor).map((v) => v.length).filter(Boolean) as string[])];
+  const lengths = [...new Set(
+    product?.variants
+      ?.filter((v) => !selectedColor || v.color === selectedColor)
+      .map((v) => v.length)
+      .filter(Boolean) as string[]
+  )].sort((a, b) => parseInt(a) - parseInt(b));
 
   const selectedVariant = product?.variants?.find(
     (v) => (!selectedColor || v.color === selectedColor) && (!selectedLength || v.length === selectedLength)
