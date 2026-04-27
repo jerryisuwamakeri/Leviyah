@@ -33,7 +33,7 @@ export default function OrdersPage() {
 
   const { data: orders, isLoading } = useQuery<Order[]>({
     queryKey: ["orders"],
-    queryFn: () => orderApi.list().then((r) => r.data),
+    queryFn: () => orderApi.list().then((r) => r.data?.data ?? r.data),
     enabled: isAuthenticated,
   });
 
