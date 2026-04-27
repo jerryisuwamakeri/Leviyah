@@ -78,6 +78,7 @@ export interface Product {
   has_variants: boolean;
   product_type: "simple" | "variable";
   thumbnail?: string;
+  thumbnail_url?: string;
   is_active: boolean;
   is_featured: boolean;
   average_rating: number;

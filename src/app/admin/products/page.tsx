@@ -14,14 +14,12 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 import type { Product, Category } from "@/types";
 
-const STORAGE = process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://localhost:8000/storage";
-
 function formatNGN(v: number) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(v);
 }
 function imgUrl(p?: string | null) {
   if (!p) return null;
-  return p.startsWith("http") ? p : `${STORAGE}/${p}`;
+  return p.startsWith("http") ? p : null;
 }
 
 const emptyForm = {
@@ -304,8 +302,8 @@ export default function AdminProductsPage() {
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-12 bg-[#1E1A17] shrink-0 overflow-hidden relative">
-                            {imgUrl(p.thumbnail) ? (
-                              <Image src={imgUrl(p.thumbnail)!} alt={p.name} fill className="object-cover" />
+                            {(p.thumbnail_url ?? imgUrl(p.thumbnail)) ? (
+                              <Image src={(p.thumbnail_url ?? imgUrl(p.thumbnail))!} alt={p.name} fill className="object-cover" />
                             ) : (
                               <div className="flex items-center justify-center h-full">
                                 <Package className="w-4 h-4 text-[#7A6050]" />

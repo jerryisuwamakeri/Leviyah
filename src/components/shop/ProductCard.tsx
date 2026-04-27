@@ -9,15 +9,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import type { Product } from "@/types";
 
-const STORAGE = process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://localhost:8000/storage";
-
 function formatNGN(v: number) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(v);
-}
-
-function buildImgUrl(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  return raw.startsWith("http") ? raw : `${STORAGE}/${raw}`;
 }
 
 export default function ProductCard({ product, promoPct = 0 }: { product: Product; promoPct?: number }) {
@@ -28,7 +21,7 @@ export default function ProductCard({ product, promoPct = 0 }: { product: Produc
   const displayPrice = promoPct > 0 ? basePrice * (1 - promoPct / 100) : basePrice;
   const isOnSale     = !!product.sale_price || promoPct > 0;
 
-  const img = buildImgUrl(product.primary_image?.url ?? product.thumbnail ?? null);
+  const img = product.primary_image?.url ?? product.thumbnail_url ?? null;
 
   const { mutate: addToCart, isPending } = useMutation({
     mutationFn: () => cartApi.add({ product_id: product.id, quantity: 1 }).then((r) => r.data),
