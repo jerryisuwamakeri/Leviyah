@@ -111,10 +111,14 @@ export const orderApi = {
 export const adminApi = {
   dashboard:    ()            => api.get("/admin/dashboard"),
 
-  products:     (p?: object)  => api.get("/admin/products", { params: p }),
-  createProduct:(d: unknown)  => api.post("/admin/products", d),
-  updateProduct:(id: number, d: unknown) => api.post(`/admin/products/${id}`, d),
-  deleteProduct:(id: number)  => api.delete(`/admin/products/${id}`),
+  products:        (p?: object)  => api.get("/admin/products", { params: p }),
+  createProduct:   (d: unknown)  => api.post("/admin/products", d),
+  updateProduct:   (id: number, d: unknown) => api.post(`/admin/products/${id}`, d),
+  deleteProduct:   (id: number)  => api.delete(`/admin/products/${id}`),
+  getProduct:      (id: number)  => api.get(`/admin/products/${id}`),
+  createVariant:   (productId: number, d: unknown) => api.post(`/admin/products/${productId}/variants`, d),
+  updateVariant:   (productId: number, variantId: number, d: unknown) => api.patch(`/admin/products/${productId}/variants/${variantId}`, d),
+  deleteVariant:   (productId: number, variantId: number) => api.delete(`/admin/products/${productId}/variants/${variantId}`),
 
   orders:       (p?: object)  => api.get("/admin/orders", { params: p }),
   orderDetail:  (id: number)  => api.get(`/admin/orders/${id}`),

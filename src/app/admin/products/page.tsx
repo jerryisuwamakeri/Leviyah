@@ -36,8 +36,10 @@ export default function AdminProductsPage() {
   const [categoryF,  setCategoryF]  = useState("");
   const [page,       setPage]       = useState(1);
   const [tab,        setTab]        = useState<"products" | "categories">("products");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editItem,   setEditItem]   = useState<Product | null>(null);
+  const [createOpen,   setCreateOpen]   = useState(false);
+  const [editItem,     setEditItem]     = useState<Product | null>(null);
+  const [variantForm,  setVariantForm]  = useState({ color: "", color_hex: "#C9A880", length: "", price: "", stock_quantity: "10" });
+  const HAIR_LENGTHS = ["8 inch","10 inch","12 inch","14 inch","16 inch","18 inch","20 inch","22 inch","24 inch","26 inch","28 inch","30 inch"];
   const [catOpen,    setCatOpen]    = useState(false);
   const [catForm,    setCatForm]    = useState({ name: "", description: "" });
   const [form,       setForm]       = useState({ ...emptyForm });
@@ -113,19 +115,42 @@ export default function AdminProductsPage() {
     },
   });
 
+  const { mutate: addVariant, isPending: addingVariant } = useMutation({
+    mutationFn: (d: unknown) => adminApi.createVariant(editItem!.id, d).then(r => r.data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin", "products"] }); toast.success("Variant added."); setVariantForm({ color: "", color_hex: "#C9A880", length: "", price: "", stock_quantity: "10" }); },
+    onError: () => toast.error("Failed to add variant."),
+  });
+
+  const { mutate: removeVariant } = useMutation({
+    mutationFn: ({ vid }: { vid: number }) => adminApi.deleteVariant(editItem!.id, vid).then(r => r.data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin", "products"] }); toast.success("Variant removed."); },
+  });
+
+  const addHairPreset = (color: string, hex: string) => {
+    if (!editItem) return;
+    const basePrice = Number(editItem.base_price);
+    HAIR_LENGTHS.forEach((length) => {
+      const inches = parseInt(length);
+      const adj = inches >= 26 ? 20000 : inches >= 22 ? 15000 : inches >= 18 ? 10000 : inches >= 14 ? 5000 : 0;
+      adminApi.createVariant(editItem.id, { color, color_hex: hex, length, price: basePrice + adj, stock_quantity: 10 });
+    });
+    setTimeout(() => { qc.invalidateQueries({ queryKey: ["admin", "products"] }); toast.success(`Added 12 lengths for ${color}`); }, 500);
+  };
+
   const openCreate = () => { setForm({ ...emptyForm }); setThumbnail(null); setCreateOpen(true); };
-  const openEdit   = (p: Product) => {
+  const openEdit = async (p: Product) => {
+    const full: Product = await adminApi.getProduct(p.id).then(r => r.data).catch(() => p);
     setForm({
-      name: p.name, category_id: String(p.category_id),
-      short_description: p.short_description ?? "",
-      description: p.description ?? "",
-      base_price: String(p.base_price), sale_price: p.sale_price ? String(p.sale_price) : "",
-      stock_quantity: String(p.stock_quantity),
-      product_type: p.product_type, has_variants: p.has_variants,
-      is_active: p.is_active, is_featured: p.is_featured,
+      name: full.name, category_id: String(full.category_id),
+      short_description: full.short_description ?? "",
+      description: full.description ?? "",
+      base_price: String(full.base_price), sale_price: full.sale_price ? String(full.sale_price) : "",
+      stock_quantity: String(full.stock_quantity),
+      product_type: full.product_type, has_variants: full.has_variants,
+      is_active: full.is_active, is_featured: full.is_featured,
     });
     setThumbnail(null);
-    setEditItem(p);
+    setEditItem(full);
   };
 
   const F = (key: string) => ({
@@ -310,7 +335,7 @@ export default function AdminProductsPage() {
                       </td>
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => openEdit(p)}
+                          <button onClick={() => void openEdit(p)}
                             className="w-7 h-7 bg-[#1E1A17] flex items-center justify-center hover:bg-[#C9A880]/20 transition-colors">
                             <Pencil className="w-3 h-3 text-[#C9A880]" />
                           </button>
@@ -443,6 +468,96 @@ export default function AdminProductsPage() {
                 </label>
               </div>
             </div>
+
+            {/* ── Variant Manager (editing variable products only) ── */}
+            {editItem?.has_variants && (
+              <div className="border border-[#2A2520] p-4 space-y-4">
+                <p className="text-[9px] font-black tracking-[0.3em] uppercase text-[#C9A880]">Variants</p>
+
+                {/* Existing variants */}
+                {editItem.variants && editItem.variants.length > 0 && (
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {editItem.variants.map((v) => (
+                      <div key={v.id} className="flex items-center justify-between bg-[#0E0C0A] px-3 py-2 text-[10px]">
+                        <div className="flex items-center gap-2">
+                          {v.color_hex && <span className="w-3 h-3 rounded-full border border-white/20 shrink-0" style={{ background: v.color_hex }} />}
+                          <span className="text-white">{[v.color, v.length].filter(Boolean).join(" / ")}</span>
+                          <span className="text-[#7A6050]">₦{Number(v.price).toLocaleString()} · {v.stock_quantity} in stock</span>
+                        </div>
+                        <button type="button" onClick={() => removeVariant({ vid: v.id })}
+                          className="text-[#7A6050] hover:text-white transition-colors ml-2">×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Hair quick-add presets */}
+                <div>
+                  <p className="text-[9px] text-[#7A6050] uppercase tracking-widest mb-2">Quick Add — All Lengths (8–30 inch) for a Color</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { name: "Natural Black",    hex: "#1a1a1a" },
+                      { name: "1B Natural Black", hex: "#2d2d2d" },
+                      { name: "Dark Brown",       hex: "#4a2c1a" },
+                      { name: "613 Blonde",       hex: "#f5e6a3" },
+                      { name: "Ombre Brown",      hex: "#8B4513" },
+                    ].map((c) => (
+                      <button key={c.name} type="button"
+                        onClick={() => addHairPreset(c.name, c.hex)}
+                        className="flex items-center gap-1.5 px-2.5 py-1 bg-[#1E1A17] border border-[#2A2520] text-[9px] text-white hover:border-[#C9A880] transition-colors">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ background: c.hex }} />
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Manual add */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-[9px] text-[#7A6050] uppercase tracking-widest mb-1">Color Name</p>
+                    <Input value={variantForm.color} onChange={(e) => setVariantForm(f => ({ ...f, color: e.target.value }))}
+                      placeholder="e.g. Black" className="bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-8 text-xs" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-[#7A6050] uppercase tracking-widest mb-1">Color Hex</p>
+                    <div className="flex gap-1">
+                      <input type="color" value={variantForm.color_hex}
+                        onChange={(e) => setVariantForm(f => ({ ...f, color_hex: e.target.value }))}
+                        className="w-8 h-8 rounded-none border border-[#2A2520] cursor-pointer bg-[#0E0C0A]" />
+                      <Input value={variantForm.color_hex} onChange={(e) => setVariantForm(f => ({ ...f, color_hex: e.target.value }))}
+                        className="bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-8 text-xs flex-1" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-[#7A6050] uppercase tracking-widest mb-1">Length (optional)</p>
+                    <select value={variantForm.length} onChange={(e) => setVariantForm(f => ({ ...f, length: e.target.value }))}
+                      className="w-full bg-[#0E0C0A] border border-[#2A2520] text-white h-8 text-xs px-2 rounded-none">
+                      <option value="">None</option>
+                      {HAIR_LENGTHS.map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-[#7A6050] uppercase tracking-widest mb-1">Price (₦)</p>
+                    <Input type="number" value={variantForm.price} onChange={(e) => setVariantForm(f => ({ ...f, price: e.target.value }))}
+                      placeholder={editItem.base_price?.toString()}
+                      className="bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-8 text-xs" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-[#7A6050] uppercase tracking-widest mb-1">Stock</p>
+                    <Input type="number" value={variantForm.stock_quantity} onChange={(e) => setVariantForm(f => ({ ...f, stock_quantity: e.target.value }))}
+                      className="bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-8 text-xs" />
+                  </div>
+                  <div className="flex items-end">
+                    <button type="button" disabled={addingVariant}
+                      onClick={() => addVariant({ ...variantForm, price: variantForm.price || editItem.base_price, stock_quantity: Number(variantForm.stock_quantity) })}
+                      className="w-full bg-[#C9A880] text-[#111111] h-8 text-[9px] font-black tracking-widest uppercase hover:bg-white transition-colors disabled:opacity-40">
+                      + Add Variant
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-3 pt-2 border-t border-[#2A2520]">
               <button type="submit" disabled={creating || updating}
