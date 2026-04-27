@@ -12,14 +12,12 @@ import ProductCard from "@/components/shop/ProductCard";
 import toast from "react-hot-toast";
 import type { Product } from "@/types";
 
-const STORAGE = process.env.NEXT_PUBLIC_STORAGE_URL ?? "http://localhost:8000/storage";
-
 function formatNGN(v: number) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(v);
 }
 function imgUrl(p?: string | null) {
   if (!p) return null;
-  return p.startsWith("http") ? p : `${STORAGE}/${p}`;
+  return p.startsWith("http") ? p : null;
 }
 
 export default function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -73,7 +71,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           <div className="aspect-[4/5] bg-[#F5EAD8] animate-pulse" />
           <div className="space-y-4">
             <div className="h-6 bg-[#F5EAD8] animate-pulse w-1/3" />
@@ -103,7 +101,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           <span className="text-[#111111]">{product.name}</span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 lg:gap-20">
 
           {/* ── Images ──────────────────────────────────── */}
           <div className="space-y-3">
@@ -176,17 +174,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 <p className="text-[9px] font-bold tracking-[0.25em] uppercase text-[#111111] mb-3">
                   Color: <span className="text-[#C9A880]">{selectedColor ?? "Select"}</span>
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                   {colors.map((color) => {
                     const v = product.variants?.find((vv) => vv.color === color);
                     return (
                       <button key={color}
                         onClick={() => { setSelectedColor(color === selectedColor ? null : color); setSelectedLength(null); }}
-                        className={`flex items-center gap-2 px-3.5 py-2 border text-[10px] font-bold tracking-widest uppercase transition-all ${selectedColor === color ? "border-[#111111] bg-[#111111] text-white" : "border-[#E8D8C4] text-[#7A6050] hover:border-[#C9A880]"}`}>
+                        className={`flex items-center justify-center gap-2 px-3 py-3 border text-[10px] font-bold tracking-widest uppercase transition-all w-full ${selectedColor === color ? "border-[#111111] bg-[#111111] text-white" : "border-[#E8D8C4] text-[#7A6050] hover:border-[#C9A880]"}`}>
                         {v?.color_hex && (
-                          <span className="w-3 h-3 rounded-full border border-current/20" style={{ background: v.color_hex }} />
+                          <span className="w-3 h-3 rounded-full shrink-0 border border-black/10" style={{ background: v.color_hex }} />
                         )}
-                        {color}
+                        <span className="truncate">{color}</span>
                       </button>
                     );
                   })}
@@ -200,11 +198,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 <p className="text-[9px] font-bold tracking-[0.25em] uppercase text-[#111111] mb-3">
                   Length: <span className="text-[#C9A880]">{selectedLength ?? "Select"}</span>
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                   {lengths.map((length) => (
                     <button key={length}
                       onClick={() => setSelectedLength(length === selectedLength ? null : length)}
-                      className={`px-3.5 py-2 border text-[10px] font-bold tracking-widest uppercase transition-all ${selectedLength === length ? "border-[#111111] bg-[#111111] text-white" : "border-[#E8D8C4] text-[#7A6050] hover:border-[#C9A880]"}`}>
+                      className={`py-3 border text-[10px] font-bold tracking-wide uppercase transition-all text-center ${selectedLength === length ? "border-[#111111] bg-[#111111] text-white" : "border-[#E8D8C4] text-[#7A6050] hover:border-[#C9A880]"}`}>
                       {length}
                     </button>
                   ))}
