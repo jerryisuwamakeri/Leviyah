@@ -30,74 +30,98 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function Receipt({ t, onClose }: { t: Transaction; onClose: () => void }) {
+  const date = new Date(t.created_at).toLocaleString("en-NG", { dateStyle: "long", timeStyle: "short" });
   return (
-    <div className="bg-[#FAFAFA] text-[#111111] font-mono p-0 max-w-sm mx-auto rounded-none">
-      <div className="bg-[#111111] px-6 py-4 flex items-center justify-between">
-        <div>
-          <p className="text-[#C9A880] text-[10px] font-black tracking-[0.4em] uppercase">Leviyah</p>
-          <p className="text-white/40 text-[8px] tracking-widest uppercase mt-0.5">Beauty & Hair</p>
-        </div>
-        <button onClick={onClose} className="text-white/30 hover:text-white transition-colors">
+    <div className="bg-white text-[#111111] font-mono w-full max-w-sm mx-auto shadow-2xl">
+
+      {/* Header band */}
+      <div className="bg-[#111111] px-6 py-5 text-center relative">
+        <button onClick={onClose} className="absolute right-4 top-4 text-white/30 hover:text-white transition-colors">
           <X className="w-4 h-4" />
         </button>
+        <p className="text-[#C9A880] text-xl font-black tracking-[0.4em] uppercase">Leviyah</p>
+        <p className="text-white/40 text-[9px] tracking-[0.3em] uppercase mt-1">Beauty & Hair</p>
+        <p className="text-white/20 text-[8px] mt-2 leading-relaxed">
+          Plot K78 Suntan Dasuki Way PW Road<br />Kubwa, Abuja
+        </p>
       </div>
 
-      <div className="px-6 pt-5 pb-2 border-b-2 border-dashed border-[#D4C5B0]">
-        <p className="text-[9px] text-[#7A6050] uppercase tracking-widest text-center">Payment Receipt</p>
-        <p className="text-[22px] font-black text-center mt-2 tracking-tight">{formatNGN(t.amount)}</p>
-        <div className="flex justify-center mt-2">
+      {/* Jagged edge */}
+      <div className="flex">
+        {Array.from({ length: 24 }).map((_, i) => (
+          <div key={i} className="flex-1 h-2 bg-[#111111]" style={{ clipPath: i % 2 === 0 ? "polygon(0 0,100% 0,50% 100%)" : "polygon(0 0,100% 0,100% 100%,0 100%)" }} />
+        ))}
+      </div>
+
+      {/* Amount hero */}
+      <div className="px-6 pt-5 pb-4 text-center border-b border-dashed border-[#E0D0BC]">
+        <p className="text-[9px] text-[#7A6050] uppercase tracking-[0.3em] mb-2">Total Amount</p>
+        <p className="text-4xl font-black tracking-tight text-[#111111]">{formatNGN(t.amount)}</p>
+        <div className="flex justify-center mt-3">
           <StatusBadge status={t.status} />
         </div>
       </div>
 
-      <div className="px-6 py-4 space-y-3 border-b border-dashed border-[#D4C5B0]">
-        {[
-          ["Reference",    t.reference],
-          ["Gateway",      t.gateway?.toUpperCase()],
-          ["Order #",      t.order?.order_number ?? "—"],
-          ["Customer",     t.user?.name ?? "—"],
-          ["Email",        t.user?.email ?? "—"],
-          ["Date",         new Date(t.created_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })],
-        ].map(([label, value]) => (
-          <div key={label} className="flex justify-between items-start gap-4">
-            <span className="text-[9px] text-[#7A6050] uppercase tracking-widest shrink-0">{label}</span>
-            <span className="text-[10px] font-bold text-right break-all">{value}</span>
+      {/* Transaction details */}
+      <div className="px-6 py-4 space-y-2.5 border-b border-dashed border-[#E0D0BC]">
+        {([
+          ["Ref",       t.reference],
+          ["Via",       t.gateway?.toUpperCase()],
+          ["Order",     t.order?.order_number ?? "—"],
+          ["Customer",  t.user?.name ?? "—"],
+          ["Date",      date],
+        ] as [string, string][]).map(([label, value]) => (
+          <div key={label} className="flex justify-between items-start gap-3">
+            <span className="text-[9px] text-[#7A6050] uppercase tracking-widest shrink-0 pt-0.5">{label}</span>
+            <span className="text-[10px] font-bold text-right break-all text-[#111111]">{value}</span>
           </div>
         ))}
       </div>
 
+      {/* Items */}
       {t.order?.items && t.order.items.length > 0 && (
-        <div className="px-6 py-4 border-b border-dashed border-[#D4C5B0]">
-          <p className="text-[9px] text-[#7A6050] uppercase tracking-widest mb-3">Items</p>
+        <div className="px-6 py-4 border-b border-dashed border-[#E0D0BC]">
+          <p className="text-[9px] text-[#7A6050] uppercase tracking-[0.3em] mb-3">Items Purchased</p>
           <div className="space-y-2">
             {t.order.items.map((item: { id: number; product_name: string; quantity: number; unit_price: number; total_price: number }) => (
-              <div key={item.id} className="flex justify-between text-[10px]">
-                <span className="text-[#3A3530]">{item.product_name} <span className="text-[#7A6050]">×{item.quantity}</span></span>
-                <span className="font-bold">{formatNGN(item.total_price)}</span>
+              <div key={item.id} className="flex justify-between text-[10px] gap-2">
+                <span className="text-[#3A3530] flex-1 min-w-0 truncate">
+                  {item.product_name}
+                  <span className="text-[#7A6050] ml-1">×{item.quantity}</span>
+                </span>
+                <span className="font-black text-[#111111] shrink-0">{formatNGN(item.total_price)}</span>
               </div>
             ))}
           </div>
+          {t.order.items.length > 1 && (
+            <div className="flex justify-between text-[10px] font-black border-t border-dotted border-[#E0D0BC] mt-2 pt-2">
+              <span className="text-[#7A6050]">Subtotal</span>
+              <span>{formatNGN(t.order.items.reduce((s: number, i: { total_price: number }) => s + i.total_price, 0))}</span>
+            </div>
+          )}
         </div>
       )}
 
-      <div className="px-6 py-4 text-center space-y-1">
-        <p className="text-[8px] text-[#7A6050] tracking-widest uppercase">Thank you for shopping with Leviyah</p>
-        <p className="text-[7px] text-[#B0A090]">Kubwa, Abuja • leviyah.com</p>
-        <div className="flex justify-center gap-1 mt-3">
-          {Array.from({ length: 28 }).map((_, i) => (
-            <div key={i} className={`h-5 w-0.5 bg-[#111111] ${i % 3 === 0 ? "w-1" : ""}`} />
+      {/* Footer */}
+      <div className="px-6 py-5 text-center space-y-1 bg-[#FAFAFA]">
+        <p className="text-[9px] text-[#C9A880] font-black tracking-[0.3em] uppercase">Thank you!</p>
+        <p className="text-[8px] text-[#7A6050]">We appreciate your business</p>
+        <p className="text-[7px] text-[#B0A090] mt-1">Plot K78 Suntan Dasuki Way PW Road, Kubwa Abuja</p>
+
+        {/* Barcode strip */}
+        <div className="flex justify-center gap-px mt-4">
+          {Array.from({ length: 40 }).map((_, i) => (
+            <div key={i} className={`bg-[#111111] ${[1,3,5].includes(i % 7) ? "w-0.5" : "w-px"} ${i % 4 === 0 ? "h-8" : "h-6"}`} />
           ))}
         </div>
-        <p className="text-[7px] text-[#7A6050] mt-1">{t.reference}</p>
+        <p className="text-[7px] text-[#7A6050] mt-1 font-mono tracking-widest">{t.reference}</p>
       </div>
 
-      <div className="px-6 pb-5">
-        <button
-          onClick={() => window.print()}
-          className="w-full flex items-center justify-center gap-2 bg-[#111111] text-[#C9A880] py-2.5 text-[10px] font-black tracking-widest uppercase hover:bg-[#1E1A17] transition-colors">
-          <Printer className="w-3.5 h-3.5" /> Print Receipt
-        </button>
-      </div>
+      {/* Print button */}
+      <button onClick={() => window.print()}
+        className="w-full flex items-center justify-center gap-2 bg-[#111111] text-[#C9A880] py-3 text-[10px] font-black tracking-widest uppercase hover:bg-[#1E1A17] transition-colors">
+        <Printer className="w-3.5 h-3.5" /> Print Receipt
+      </button>
     </div>
   );
 }

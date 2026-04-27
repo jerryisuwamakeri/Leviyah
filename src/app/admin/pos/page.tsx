@@ -115,63 +115,85 @@ function ReceiptModal({
   change: number;
   onClose: () => void;
 }) {
+  const now = new Date().toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" });
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-xs font-mono text-xs">
-        {/* Receipt */}
-        <div className="p-6 space-y-4">
-          <div className="text-center border-b border-dashed border-gray-300 pb-4">
-            <p className="text-lg font-black tracking-widest uppercase text-[#111111]">Leviyah</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">Kubwa, Abuja · +234 905 778 2627</p>
-            <p className="text-[10px] text-gray-400 mt-2">{new Date().toLocaleString()}</p>
-            <p className="text-[10px] font-bold text-[#111111] mt-1">#{order.order_number}</p>
-          </div>
+      <div className="bg-white w-full max-w-xs font-mono shadow-2xl">
 
-          <div className="space-y-2">
-            {order.items.map((item, i) => (
-              <div key={i} className="flex justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="truncate text-[#111111]">{item.product.name}</p>
-                  {item.variant && <p className="text-gray-400 text-[9px]">{item.variant.label}</p>}
-                  <p className="text-gray-500">x{item.quantity}</p>
-                </div>
-                <p className="text-[#111111] font-bold shrink-0">
-                  {formatNGN(item.unitPrice * item.quantity)}
-                </p>
+        {/* Header */}
+        <div className="bg-[#111111] px-5 py-5 text-center">
+          <p className="text-[#C9A880] text-xl font-black tracking-[0.4em] uppercase">Leviyah</p>
+          <p className="text-white/40 text-[8px] tracking-[0.3em] uppercase mt-1">Beauty & Hair — POS Sale</p>
+          <p className="text-white/20 text-[8px] mt-2 leading-relaxed">
+            Plot K78 Suntan Dasuki Way PW Road<br />Kubwa, Abuja
+          </p>
+        </div>
+
+        {/* Jagged edge */}
+        <div className="flex bg-[#111111]">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div key={i} className="flex-1 h-2 bg-white" style={{ clipPath: i % 2 === 0 ? "polygon(0 100%,50% 0,100% 100%)" : "none" }} />
+          ))}
+        </div>
+
+        {/* Order info */}
+        <div className="px-5 pt-4 pb-3 text-center border-b border-dashed border-[#E0D0BC]">
+          <p className="text-[8px] text-[#7A6050] tracking-widest uppercase">Order</p>
+          <p className="text-[11px] font-black text-[#111111] mt-0.5">#{order.order_number}</p>
+          <p className="text-[8px] text-[#7A6050] mt-1">{now}</p>
+        </div>
+
+        {/* Items */}
+        <div className="px-5 py-4 space-y-2.5 border-b border-dashed border-[#E0D0BC]">
+          {order.items.map((item, i) => (
+            <div key={i} className="flex justify-between gap-2 text-[10px]">
+              <div className="flex-1 min-w-0">
+                <p className="truncate font-bold text-[#111111]">{item.product.name}</p>
+                {item.variant && <p className="text-[#7A6050] text-[9px]">{item.variant.label}</p>}
+                <p className="text-[#7A6050]">×{item.quantity} @ {formatNGN(item.unitPrice)}</p>
               </div>
+              <p className="font-black text-[#111111] shrink-0">{formatNGN(item.unitPrice * item.quantity)}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Totals */}
+        <div className="px-5 py-4 space-y-2 border-b border-dashed border-[#E0D0BC]">
+          <div className="flex justify-between text-[11px] font-black text-[#111111]">
+            <span>TOTAL</span>
+            <span>{formatNGN(order.total)}</span>
+          </div>
+          <div className="flex justify-between text-[9px] text-[#7A6050]">
+            <span>Payment</span>
+            <span className="uppercase font-bold text-[#111111]">{order.payment_method}</span>
+          </div>
+          {change > 0 && (
+            <div className="flex justify-between text-[10px] font-black text-[#C9A880]">
+              <span>Change</span>
+              <span>{formatNGN(change)}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 text-center bg-[#FAFAFA]">
+          <p className="text-[9px] text-[#C9A880] font-black tracking-[0.3em] uppercase">Thank you!</p>
+          <p className="text-[7px] text-[#B0A090] mt-1">Plot K78 Suntan Dasuki Way PW Road, Kubwa Abuja</p>
+          <div className="flex justify-center gap-px mt-3">
+            {Array.from({ length: 36 }).map((_, i) => (
+              <div key={i} className={`bg-[#111111] ${[1,3].includes(i % 5) ? "w-0.5" : "w-px"} ${i % 3 === 0 ? "h-7" : "h-5"}`} />
             ))}
-          </div>
-
-          <div className="border-t border-dashed border-gray-300 pt-3 space-y-1.5">
-            <div className="flex justify-between text-[#111111] font-black">
-              <span>TOTAL</span>
-              <span>{formatNGN(order.total)}</span>
-            </div>
-            <div className="flex justify-between text-gray-500">
-              <span>Payment</span>
-              <span className="uppercase">{order.payment_method}</span>
-            </div>
-            {change > 0 && (
-              <div className="flex justify-between text-[#C9A880] font-bold">
-                <span>Change</span>
-                <span>{formatNGN(change)}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="text-center border-t border-dashed border-gray-300 pt-4">
-            <p className="text-[10px] text-gray-400">Thank you for shopping at Leviyah!</p>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="border-t border-gray-200 grid grid-cols-2">
+        <div className="grid grid-cols-2 border-t border-[#E0D0BC]">
           <button onClick={() => window.print()}
-            className="flex items-center justify-center gap-1.5 py-3.5 text-[10px] font-bold tracking-widest uppercase text-[#7A6050] hover:bg-gray-50 transition-colors border-r border-gray-200">
+            className="flex items-center justify-center gap-1.5 py-3.5 text-[10px] font-black tracking-widest uppercase text-[#7A6050] hover:bg-[#F5EAD8] transition-colors border-r border-[#E0D0BC]">
             <Printer className="w-3.5 h-3.5" /> Print
           </button>
           <button onClick={onClose}
-            className="flex items-center justify-center gap-1.5 py-3.5 text-[10px] font-bold tracking-widest uppercase bg-[#C9A880] text-[#111111] hover:bg-[#B8905C] transition-colors">
+            className="flex items-center justify-center gap-1.5 py-3.5 text-[10px] font-black tracking-widest uppercase bg-[#C9A880] text-[#111111] hover:bg-[#111111] hover:text-[#C9A880] transition-colors">
             <Check className="w-3.5 h-3.5" /> Done
           </button>
         </div>
