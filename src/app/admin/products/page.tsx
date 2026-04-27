@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Package, Plus, Pencil, Trash2, Search, Eye, EyeOff } from "lucide-react";
+import { Package, Plus, Pencil, Trash2, Search, Eye, EyeOff, Tag } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import type { Product, Category } from "@/types";
@@ -35,8 +35,11 @@ export default function AdminProductsPage() {
   const [search,     setSearch]     = useState("");
   const [categoryF,  setCategoryF]  = useState("");
   const [page,       setPage]       = useState(1);
+  const [tab,        setTab]        = useState<"products" | "categories">("products");
   const [createOpen, setCreateOpen] = useState(false);
   const [editItem,   setEditItem]   = useState<Product | null>(null);
+  const [catOpen,    setCatOpen]    = useState(false);
+  const [catForm,    setCatForm]    = useState({ name: "", description: "" });
   const [form,       setForm]       = useState({ ...emptyForm });
   const [thumbnail,  setThumbnail]  = useState<File | null>(null);
 
@@ -99,6 +102,17 @@ export default function AdminProductsPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin", "products"] }); toast.success("Deleted."); },
   });
 
+  const { mutate: createCategory, isPending: creatingCat } = useMutation({
+    mutationFn: (d: unknown) => fetch(
+      `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api"}/admin/products/categories`,
+      { method: "POST", headers: { Authorization: `Bearer ${localStorage.getItem("lvy_token")}`, "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(d) }
+    ).then((r) => r.json()),
+    onSuccess: (d) => {
+      if (d.id) { toast.success("Category created!"); qc.invalidateQueries({ queryKey: ["admin", "categories"] }); setCatOpen(false); setCatForm({ name: "", description: "" }); }
+      else toast.error(d.message ?? "Failed.");
+    },
+  });
+
   const openCreate = () => { setForm({ ...emptyForm }); setThumbnail(null); setCreateOpen(true); };
   const openEdit   = (p: Product) => {
     setForm({
@@ -134,11 +148,93 @@ export default function AdminProductsPage() {
             <Package className="w-5 h-5 text-[#C9A880]" /> Products
           </h1>
         </div>
-        <button onClick={openCreate}
-          className="flex items-center gap-2 bg-[#C9A880] text-[#111111] px-4 py-2.5 text-[10px] font-black tracking-widest uppercase hover:bg-white transition-colors">
-          <Plus className="w-3.5 h-3.5" /> New Product
-        </button>
+        {tab === "products"
+          ? <button onClick={openCreate} className="flex items-center gap-2 bg-[#C9A880] text-[#111111] px-4 py-2.5 text-[10px] font-black tracking-widest uppercase hover:bg-white transition-colors">
+              <Plus className="w-3.5 h-3.5" /> New Product
+            </button>
+          : <button onClick={() => setCatOpen(true)} className="flex items-center gap-2 bg-[#C9A880] text-[#111111] px-4 py-2.5 text-[10px] font-black tracking-widest uppercase hover:bg-white transition-colors">
+              <Plus className="w-3.5 h-3.5" /> New Category
+            </button>
+        }
       </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-[#2A2520]">
+        {[{ id: "products", label: "Products", icon: Package }, { id: "categories", label: "Categories", icon: Tag }].map(({ id, label, icon: Icon }) => (
+          <button key={id} onClick={() => setTab(id as typeof tab)}
+            className={`flex items-center gap-2 px-5 py-3 text-[10px] font-black tracking-widest uppercase border-b-2 transition-colors ${
+              tab === id ? "border-[#C9A880] text-[#C9A880]" : "border-transparent text-[#7A6050] hover:text-white"
+            }`}>
+            <Icon className="w-3.5 h-3.5" /> {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Categories tab */}
+      {tab === "categories" && (
+        <>
+          <div className="bg-[#111111] border border-[#2A2520] rounded-none overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="border-b border-[#2A2520]">
+                <tr>
+                  {["Name", "Slug", "Products", "Status", ""].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left text-[9px] font-black tracking-[0.25em] uppercase text-[#7A6050]">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1E1A17]">
+                {categories.length === 0 && (
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-[#3A3530] text-xs">No categories yet.</td></tr>
+                )}
+                {categories.map((c) => (
+                  <tr key={c.id} className="hover:bg-[#1E1A17]/60 transition-colors">
+                    <td className="px-4 py-3 font-bold text-white text-xs">{c.name}</td>
+                    <td className="px-4 py-3 font-mono text-[10px] text-[#7A6050]">{c.slug}</td>
+                    <td className="px-4 py-3 text-xs text-[#7A6050]">{(c as { products_count?: number }).products_count ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className="px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-[#C9A880]/15 text-[#C9A880] border border-[#C9A880]/30">Active</span>
+                    </td>
+                    <td className="px-4 py-3 text-[10px] text-[#7A6050]">Built-in</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* New Category Dialog */}
+          <Dialog open={catOpen} onOpenChange={setCatOpen}>
+            <DialogContent className="bg-[#111111] border border-[#2A2520] rounded-none text-white max-w-md p-0">
+              <DialogHeader className="px-6 py-4 border-b border-[#2A2520]">
+                <DialogTitle className="text-sm font-black text-white">New Category</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={(e) => { e.preventDefault(); createCategory(catForm); }} className="px-6 py-5 space-y-4">
+                <div>
+                  <Label className="text-[9px] font-bold tracking-widest uppercase text-[#7A6050] mb-1.5 block">Name <span className="text-[#C9A880]">*</span></Label>
+                  <Input value={catForm.name} onChange={(e) => setCatForm(f => ({ ...f, name: e.target.value }))} required
+                    placeholder="e.g. Fragrances" className="bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-10 focus-visible:ring-[#C9A880]/30" />
+                </div>
+                <div>
+                  <Label className="text-[9px] font-bold tracking-widest uppercase text-[#7A6050] mb-1.5 block">Description</Label>
+                  <Input value={catForm.description} onChange={(e) => setCatForm(f => ({ ...f, description: e.target.value }))}
+                    placeholder="Optional description" className="bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-10 focus-visible:ring-[#C9A880]/30" />
+                </div>
+                <div className="flex gap-3 pt-1">
+                  <Button type="button" variant="ghost" onClick={() => setCatOpen(false)}
+                    className="flex-1 border border-[#2A2520] text-[#7A6050] hover:text-white hover:bg-[#1E1A17] rounded-none h-10 text-[10px] tracking-widest uppercase">
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={creatingCat}
+                    className="flex-1 bg-[#C9A880] text-[#111111] hover:bg-white rounded-none h-10 text-[10px] font-black tracking-widest uppercase">
+                    {creatingCat ? "Creating…" : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
+
+      {tab === "products" && (<>
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
@@ -361,6 +457,7 @@ export default function AdminProductsPage() {
           </form>
         </DialogContent>
       </Dialog>
+      </>)} {/* end tab === products */}
     </div>
   );
 }
