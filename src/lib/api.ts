@@ -18,12 +18,24 @@ function getCartSessionId(): string {
   return id;
 }
 
+function requestGeo() {
+  if (typeof window === "undefined" || !navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition((pos) => {
+    localStorage.setItem("lvy_lat", String(pos.coords.latitude));
+    localStorage.setItem("lvy_lng", String(pos.coords.longitude));
+  });
+}
+requestGeo();
+
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("lvy_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
-    // Always send cart session so guest carts are isolated
     config.headers["X-Cart-Session"] = getCartSessionId();
+    const lat = localStorage.getItem("lvy_lat");
+    const lng = localStorage.getItem("lvy_lng");
+    if (lat) config.headers["X-Latitude"]  = lat;
+    if (lng) config.headers["X-Longitude"] = lng;
   }
   return config;
 });
