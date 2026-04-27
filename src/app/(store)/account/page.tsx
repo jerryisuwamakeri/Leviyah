@@ -1,0 +1,79 @@
+"use client";
+
+import { useAuthStore } from "@/store/auth";
+import { authApi } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import Link from "next/link";
+import { Package, User, LogOut, ChevronRight } from "lucide-react";
+
+export default function AccountPage() {
+  const { isAuthenticated, user, logout } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated) router.replace("/login?redirect=/account");
+  }, [isAuthenticated, router]);
+
+  const handleLogout = async () => {
+    try { await authApi.logout(); } catch { /* ignore */ }
+    logout();
+    router.push("/");
+  };
+
+  if (!isAuthenticated || !user) return null;
+
+  return (
+    <div className="bg-[#FAFAFA] min-h-screen">
+      <div className="max-w-md mx-auto px-4 sm:px-6 py-10">
+
+        {/* Header */}
+        <div className="mb-8">
+          <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-[#C9A880] mb-1">Welcome back</p>
+          <h1 className="text-2xl font-black text-[#111111]">{user.name}</h1>
+          <p className="text-xs text-[#B8A090] mt-0.5">{user.email}</p>
+        </div>
+
+        {/* Menu */}
+        <div className="bg-white border border-[#E8D8C4] divide-y divide-[#F5EAD8]">
+          <Link href="/account/orders"
+            className="flex items-center justify-between px-5 py-4 hover:bg-[#FDFAF7] transition-colors group">
+            <div className="flex items-center gap-3">
+              <Package className="w-4 h-4 text-[#C9A880]" />
+              <div>
+                <p className="text-sm font-bold text-[#111111]">My Orders</p>
+                <p className="text-[10px] text-[#B8A090]">Track and view your orders</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#C9A880] group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+
+          <Link href="/account/profile"
+            className="flex items-center justify-between px-5 py-4 hover:bg-[#FDFAF7] transition-colors group">
+            <div className="flex items-center gap-3">
+              <User className="w-4 h-4 text-[#C9A880]" />
+              <div>
+                <p className="text-sm font-bold text-[#111111]">Profile</p>
+                <p className="text-[10px] text-[#B8A090]">Update your name, phone, and password</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#C9A880] group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-5 py-4 hover:bg-[#FFF8F5] transition-colors text-left">
+            <LogOut className="w-4 h-4 text-[#B8A090]" />
+            <p className="text-sm font-bold text-[#7A6050]">Sign Out</p>
+          </button>
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link href="/shop"
+            className="text-[10px] font-bold tracking-widest uppercase text-[#C9A880] hover:text-[#111111] transition-colors">
+            Continue Shopping →
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
