@@ -3,17 +3,29 @@
 import { useAuthStore } from "@/store/auth";
 import { authApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Package, User, LogOut, ChevronRight } from "lucide-react";
+import type { User as UserType } from "@/types";
 
 export default function AccountPage() {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, isStaff, token, setUser, logout } = useAuthStore();
   const router = useRouter();
+  const [me, setMe] = useState<UserType | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) router.replace("/login?redirect=/account");
-  }, [isAuthenticated, router]);
+    if (!isAuthenticated || isStaff) {
+      router.replace("/login?redirect=/account");
+      return;
+    }
+    authApi.me().then((r) => {
+      setMe(r.data);
+      setUser(r.data, token!);
+    }).catch(() => {
+      logout();
+      router.replace("/login?redirect=/account");
+    });
+  }, [isAuthenticated, isStaff, token, setUser, logout, router]);
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch { /* ignore */ }
@@ -21,7 +33,11 @@ export default function AccountPage() {
     router.push("/");
   };
 
-  if (!isAuthenticated || !user) return null;
+  if (!me) return (
+    <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-[#C9A880] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   return (
     <div className="bg-[#FAFAFA] min-h-screen">
@@ -30,8 +46,8 @@ export default function AccountPage() {
         {/* Header */}
         <div className="mb-8">
           <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-[#C9A880] mb-1">Welcome back</p>
-          <h1 className="text-2xl font-black text-[#111111]">{user.name}</h1>
-          <p className="text-xs text-[#B8A090] mt-0.5">{user.email}</p>
+          <h1 className="text-2xl font-black text-[#111111]">{me.name}</h1>
+          <p className="text-xs text-[#B8A090] mt-0.5">{me.email}</p>
         </div>
 
         {/* Menu */}
