@@ -151,4 +151,13 @@ export const adminApi = {
 
   clockIn:      (qr: string)  => api.post("/attendance/clock-in", { qr_code: qr }),
   clockOut:     (qr: string)  => api.post("/attendance/clock-out", { qr_code: qr }),
+
+  expenses:        (p?: object)      => api.get("/admin/expenses", { params: p }),
+  createExpense:   (d: unknown)      => api.post("/admin/expenses", d),
+  updateExpense:   (id: number, d: unknown) => api.patch(`/admin/expenses/${id}`, d),
+  deleteExpense:   (id: number)      => api.delete(`/admin/expenses/${id}`),
+
+  inventoryReport: (p?: object)     => api.get("/admin/inventory/report", { params: p }),
+  lowStockAlerts:  ()               => api.get("/admin/inventory/low-stock"),
+  barcodeSearch:   (barcode: string) => api.get("/admin/inventory/barcode", { params: { barcode } }),
 };

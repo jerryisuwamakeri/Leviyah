@@ -71,10 +71,13 @@ export interface Product {
   short_description?: string;
   description?: string;
   sku?: string;
+  barcode?: string;
   base_price: number;
   sale_price?: number;
   effective_price: number;
   stock_quantity: number;
+  low_stock_threshold?: number;
+  track_inventory?: boolean;
   has_variants: boolean;
   product_type: "simple" | "variable";
   thumbnail?: string;
@@ -87,6 +90,19 @@ export interface Product {
   variants?: ProductVariant[];
   images?: ProductImage[];
   primary_image?: ProductImage;
+}
+
+export interface Expense {
+  id: number;
+  title: string;
+  description?: string;
+  amount: number;
+  category: string;
+  expense_date: string;
+  reference?: string;
+  staff_id?: number;
+  staff?: Staff;
+  created_at: string;
 }
 
 export interface CartItem {
@@ -225,7 +241,10 @@ export interface DashboardStats {
   new_customers: number;
   total_products: number;
   low_stock: number;
+  out_of_stock: number;
   open_chats: number;
+  total_expenses: number;
+  net_profit: number;
 }
 
 export interface PaginatedResponse<T> {

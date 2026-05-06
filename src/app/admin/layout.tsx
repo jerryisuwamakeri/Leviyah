@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, CreditCard,
   MessageSquare, Activity, MonitorSmartphone, LogOut, Menu, X, Tag,
-  ChevronDown, UserCircle,
+  ChevronDown, UserCircle, BarChart3, TrendingDown,
 } from "lucide-react";
 import { staffAuthApi } from "@/lib/api";
 
@@ -31,6 +31,8 @@ const ALL_NAV = [
   { icon: MessageSquare,     label: "Chats",         href: "/admin/chat",           roles: ["super_admin","admin","manager","support"] },
   { icon: MonitorSmartphone, label: "POS",           href: "/admin/pos",            roles: ["super_admin","admin","manager","cashier"] },
   { icon: Tag,               label: "Promotions",    href: "/admin/promotions",     roles: ["super_admin","admin","manager"] },
+  { icon: BarChart3,         label: "Inventory",     href: "/admin/inventory",      roles: ["super_admin","admin","manager"] },
+  { icon: TrendingDown,      label: "Expenses",      href: "/admin/expenses",       roles: ["super_admin","admin","manager"] },
   { icon: Activity,          label: "Activity Logs", href: "/admin/activity-logs",  roles: ["super_admin","admin"] },
   { icon: UserCircle,        label: "My Profile",    href: "/admin/profile",        roles: ["super_admin","admin","manager","cashier","support"] },
 ];

@@ -24,7 +24,7 @@ function imgUrl(p?: string | null) {
 
 const emptyForm = {
   name: "", category_id: "", short_description: "", description: "",
-  base_price: "", sale_price: "", stock_quantity: "0",
+  barcode: "", sku: "", base_price: "", sale_price: "", stock_quantity: "0", low_stock_threshold: "5",
   product_type: "simple", has_variants: false, is_active: true, is_featured: false,
 };
 
@@ -142,8 +142,10 @@ export default function AdminProductsPage() {
       name: full.name, category_id: String(full.category_id),
       short_description: full.short_description ?? "",
       description: full.description ?? "",
+      barcode: full.barcode ?? "", sku: full.sku ?? "",
       base_price: String(full.base_price), sale_price: full.sale_price ? String(full.sale_price) : "",
       stock_quantity: String(full.stock_quantity),
+      low_stock_threshold: String(full.low_stock_threshold ?? 5),
       product_type: full.product_type, has_variants: full.has_variants,
       is_active: full.is_active, is_featured: full.is_featured,
     });
@@ -412,6 +414,19 @@ export default function AdminProductsPage() {
                 </Select>
               </div>
 
+              {/* Barcode — XPS 9900 scans directly into this field */}
+              <div>
+                <Label className="text-[#7A6050] text-[10px] font-bold tracking-widest uppercase">Barcode (Scan or Type)</Label>
+                <Input {...F("barcode")} placeholder="Focus here, then scan with XPS 9900"
+                  className="mt-1.5 bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-10 font-mono" />
+              </div>
+
+              <div>
+                <Label className="text-[#7A6050] text-[10px] font-bold tracking-widest uppercase">SKU</Label>
+                <Input {...F("sku")}
+                  className="mt-1.5 bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-10" />
+              </div>
+
               <div>
                 <Label className="text-[#7A6050] text-[10px] font-bold tracking-widest uppercase">Base Price (₦) *</Label>
                 <Input type="number" min="0" step="0.01" {...F("base_price")}
@@ -424,10 +439,17 @@ export default function AdminProductsPage() {
                   className="mt-1.5 bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-10" />
               </div>
 
-              <div>
-                <Label className="text-[#7A6050] text-[10px] font-bold tracking-widest uppercase">Stock Quantity</Label>
-                <Input type="number" min="0" {...F("stock_quantity")}
-                  className="mt-1.5 bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-10" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-[#7A6050] text-[10px] font-bold tracking-widest uppercase">Stock Quantity</Label>
+                  <Input type="number" min="0" {...F("stock_quantity")}
+                    className="mt-1.5 bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-10" />
+                </div>
+                <div>
+                  <Label className="text-[#7A6050] text-[10px] font-bold tracking-widest uppercase">Low Stock Alert At</Label>
+                  <Input type="number" min="0" {...F("low_stock_threshold")}
+                    className="mt-1.5 bg-[#0E0C0A] border-[#2A2520] text-white rounded-none h-10" />
+                </div>
               </div>
 
               <div>
