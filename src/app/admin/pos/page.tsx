@@ -211,6 +211,8 @@ export default function POSPage() {
   const [discount,     setDiscount]     = useState("0");
   const [customerName, setCustomerName] = useState("");
   const [scanning,     setScanning]     = useState(false);
+  const [barcodeVal,   setBarcodeVal]   = useState("");
+  const barcodeRef = useRef<HTMLInputElement>(null);
   const [receipt,      setReceipt]      = useState<{
     order_number: string; total: number; items: PosItem[]; payment_method: string;
   } | null>(null);
@@ -247,23 +249,39 @@ export default function POSPage() {
     else setItems((p) => p.map((item, i) => i === idx ? { ...item, quantity: qty } : item));
   };
 
-  /* ── QR Scan handler ── */
-  const handleScan = useCallback((code: string) => {
+  /* ── QR / Barcode scan handler ── */
+  const handleScan = useCallback(async (code: string) => {
     setScanning(false);
-    // QR code format: "LVY-{product_id}" or just the SKU
-    const match = code.match(/LVY-(\d+)/i) ?? code.match(/^(\d+)$/);
-    if (!match) {
-      toast.error(`Unknown code: ${code}`);
-      return;
-    }
-    const productId = parseInt(match[1]);
-    const product = products?.find((p) => p.id === productId);
-    if (product) {
+    setBarcodeVal("");
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    try {
+      const { data: product } = await adminApi.barcodeSearch(trimmed);
       addItem(product);
-    } else {
-      toast.error("Product not found for this code.");
+    } catch {
+      toast.error(`No product found for: ${trimmed}`);
     }
-  }, [products, addItem]);
+  }, [addItem]);
+
+  /* ── Physical scanner: global keydown buffer ── */
+  useEffect(() => {
+    const buffer = { val: "", timer: null as ReturnType<typeof setTimeout> | null };
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "Enter") {
+        if (buffer.val.length >= 3) void handleScan(buffer.val);
+        buffer.val = "";
+        if (buffer.timer) clearTimeout(buffer.timer);
+      } else if (e.key.length === 1) {
+        buffer.val += e.key;
+        if (buffer.timer) clearTimeout(buffer.timer);
+        buffer.timer = setTimeout(() => { buffer.val = ""; }, 100);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleScan]);
 
   /* ── Totals ── */
   const subtotal    = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
@@ -326,7 +344,7 @@ export default function POSPage() {
         <div className="flex-1 min-w-0 flex flex-col gap-4">
 
           {/* Search + scan bar */}
-          <div className="bg-[#111111] border border-[#2A2520] p-4">
+          <div className="bg-[#111111] border border-[#2A2520] p-4 space-y-2">
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7A6050]" />
@@ -343,6 +361,18 @@ export default function POSPage() {
                 <Scan className="w-4 h-4" />
                 Scan QR
               </button>
+            </div>
+            {/* Physical barcode scanner input */}
+            <div className="relative">
+              <Scan className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7A6050]" />
+              <Input
+                ref={barcodeRef}
+                value={barcodeVal}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBarcodeVal(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { void handleScan(barcodeVal); e.preventDefault(); } }}
+                placeholder="Scan barcode here (or type barcode + Enter)…"
+                className="pl-9 bg-[#0E0C0A] border-[#2A2520] border-dashed text-white placeholder-[#3A3530] rounded-none h-9 text-xs"
+              />
             </div>
           </div>
 

@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Package, Plus, Pencil, Trash2, Search, Eye, EyeOff, Tag } from "lucide-react";
+import { Package, Plus, Pencil, Trash2, Search, Eye, EyeOff, Tag, QrCode } from "lucide-react";
+import Barcode from "react-barcode";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import type { Product, Category } from "@/types";
@@ -39,6 +40,7 @@ export default function AdminProductsPage() {
   const [variantForm,  setVariantForm]  = useState({ color: "", color_hex: "#C9A880", length: "", price: "", stock_quantity: "10" });
   const HAIR_LENGTHS = ["8 inch","10 inch","12 inch","14 inch","16 inch","18 inch","20 inch","22 inch","24 inch","26 inch","28 inch","30 inch"];
   const [catOpen,    setCatOpen]    = useState(false);
+  const [qrProduct,  setQrProduct]  = useState<Product | null>(null);
   const [catForm,    setCatForm]    = useState({ name: "", description: "" });
   const [form,       setForm]       = useState({ ...emptyForm });
   const [thumbnail,  setThumbnail]  = useState<File | null>(null);
@@ -335,6 +337,10 @@ export default function AdminProductsPage() {
                       </td>
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => setQrProduct(p)}
+                            className="w-7 h-7 bg-[#1E1A17] flex items-center justify-center hover:bg-[#C9A880]/20 transition-colors" title="QR / Barcode label">
+                            <QrCode className="w-3 h-3 text-[#C9A880]" />
+                          </button>
                           <button onClick={() => void openEdit(p)}
                             className="w-7 h-7 bg-[#1E1A17] flex items-center justify-center hover:bg-[#C9A880]/20 transition-colors">
                             <Pencil className="w-3 h-3 text-[#C9A880]" />
@@ -370,6 +376,45 @@ export default function AdminProductsPage() {
           </div>
         )}
       </div>
+
+      {/* QR Label Dialog */}
+      <Dialog open={!!qrProduct} onOpenChange={(o) => !o && setQrProduct(null)}>
+        <DialogContent className="bg-[#111111] border-[#2A2520] text-white max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-white font-black text-sm">Product Label</DialogTitle>
+          </DialogHeader>
+          {qrProduct && (
+            <div id="qr-label" className="flex flex-col items-center gap-4 py-4">
+              <div className="bg-white p-4">
+                <Barcode
+                  value={qrProduct.barcode ?? `LVY${String(qrProduct.id).padStart(6, "0")}`}
+                  format="CODE128"
+                  width={2}
+                  height={80}
+                  displayValue={false}
+                  background="#ffffff"
+                  lineColor="#000000"
+                />
+              </div>
+              <div className="text-center">
+                <p className="text-white font-black text-sm">{qrProduct.name}</p>
+                <p className="text-[#C9A880] font-mono text-xs mt-1">
+                  {qrProduct.barcode ?? `LVY${String(qrProduct.id).padStart(6, "0")}`}
+                </p>
+                <p className="text-[#7A6050] text-[10px] mt-0.5">
+                  {formatNGN(Number(qrProduct.sale_price ?? qrProduct.base_price))}
+                </p>
+              </div>
+              <button
+                onClick={() => window.print()}
+                className="w-full bg-[#C9A880] text-[#111111] py-2.5 text-[10px] font-black tracking-widest uppercase hover:bg-white transition-colors"
+              >
+                Print Label
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Create / Edit Dialog */}
       <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
